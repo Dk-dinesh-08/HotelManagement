@@ -98,16 +98,22 @@ public class Admin extends Person {
                     String newRoomType;
                     switch (number) {
                         case 1:
-                            newRoomType = RoomType.SINGLE.toString();
+                            System.out.println("1. AC\n2. Non AC");
+                            int acChoice = Integer.parseInt(reader.readLine());
+                            newRoomType = (acChoice == 1) ? RoomType.SINGLE_AC.toString() :  RoomType.SINGLE_NON_AC.toString() ;
                             break;
                         case 2:
-                            newRoomType = RoomType.DOUBLE.toString();
+                            System.out.println("1. AC\n2. Non AC");
+                            acChoice = Integer.parseInt(reader.readLine());
+                            newRoomType = (acChoice == 1) ? RoomType.DOUBLE_AC.toString() : RoomType.DOUBLE_NON_AC.toString();
                             break;
                         case 3:
-                            newRoomType = RoomType.SUITE.toString();
+                            System.out.println("1. AC\n2. Non AC");
+                            acChoice = Integer.parseInt(reader.readLine());
+                            newRoomType = (acChoice == 1) ? RoomType.SUITE_AC.toString() : RoomType.SUITE_NON_AC.toString();
                             break;
                         case 4:
-                            System.out.println("Going back to previous menu...");
+                            System.out.println("Going back to the previous menu...");
                             return;
                         default:
                             System.out.println("Invalid choice.");
@@ -115,6 +121,7 @@ public class Admin extends Person {
                     }
                     updateRoomType(roomNumber, newRoomType);
                     break;
+
                     case 2:
                         System.out.print("Enter room number: ");
                         int roomNum = Integer.parseInt(reader.readLine());

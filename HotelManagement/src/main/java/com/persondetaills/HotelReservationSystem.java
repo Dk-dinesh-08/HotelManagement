@@ -40,7 +40,6 @@ public class HotelReservationSystem {
                 // Load the Oracle JDBC driver and establish a connection to the database
                 Class.forName("oracle.jdbc.driver.OracleDriver");
                 conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
-                System.out.println("Connected to the database.");
 
                 // Create a BufferedReader to read user input
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -89,7 +88,7 @@ public class HotelReservationSystem {
                         choice = 0; 
                     }
                 } while (!exit && choice != 3);
-                conn.close(); // Close the database connection
+                conn.close(); 
             } catch (SQLException | IOException | ClassNotFoundException | CustomException e) {
                 System.out.println(e.getMessage());
             }

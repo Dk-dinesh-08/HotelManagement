@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
 public class InputValidator {
     public  boolean isValidFirstName(String firstName) {
     	//@return true or false
-        return firstName.matches("[a-zA-Z0-9]+$");
+        return firstName.matches("[a-zA-Z]+$");
     }
 
     public  boolean isValidLastName(String lastName) {
     	//@return true or false
-        return lastName.matches("[a-zA-Z]+");
+        return lastName.matches("[a-zA-Z]+$");
     }
 
  
@@ -55,6 +55,10 @@ public class InputValidator {
         return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
     }
     
+    public boolean isvalidCheckDate(String checkDate) {
+    	//@return true or false
+        return checkDate.matches("^(\\d{4})-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$");
+    }
     public boolean  Agecalculation(String dob){
     	LocalDate birthDate = LocalDate.parse(dob);
     	 LocalDate currentDate = LocalDate.now();

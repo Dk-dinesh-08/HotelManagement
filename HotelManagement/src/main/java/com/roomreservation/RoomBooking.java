@@ -64,7 +64,7 @@ public class RoomBooking {
         try {
         	
         	
-            if (isRoomAvailable(room.getRoomnumber())) {
+         
             	int  reservedId = generateNewReservationId(conn);
             	String bookRoomSql="INSERT INTO DINESH.reservation  VALUES (?, ?, ?,sysdate,?, ?, ?)";
                 PreparedStatement statement = conn.prepareStatement(bookRoomSql);            
@@ -102,9 +102,6 @@ public class RoomBooking {
                     	
                     }
                 } 
-            } else {
-                System.out.println("The selected room is not available for booking.");
-            }
         } catch (SQLException e) {
         	System.out.println(e.getMessage());
         } catch (IOException e) {
@@ -113,14 +110,7 @@ public class RoomBooking {
 		}
     }
 
-    private boolean isRoomAvailable(int roomNumber) throws SQLException {
-        String checkAvailabilitySql = "SELECT * FROM DINESH.rooms WHERE room_number = ? AND Available = ?";
-        PreparedStatement statement = conn.prepareStatement(checkAvailabilitySql);
-        statement.setInt(1, roomNumber);
-        statement.setString(2, BookingStatus.AVAILABLE.toString());
-        ResultSet resultSet = statement.executeQuery();
-        return resultSet.next();
-    }
+    
     
     public int generateNewReservationId(Connection conn) {
         try {     
@@ -173,7 +163,7 @@ public class RoomBooking {
     }
     public void cancelBooking(int reservationId,Connection connect) {
         try {
-            String cancelBookingSql = "UPDATE DINESH.reservation SET status = ?	WHERE reservation_id = ? AND status = 'AVAILABLE'";
+            String cancelBookingSql = "UPDATE DINESH.reservation SET status = ?	WHERE reservation_id = ? AND status = 'BOOKED'";
             PreparedStatement statement = connect.prepareStatement(cancelBookingSql);
             statement.setString(1, BookingStatus.CANCELED.toString());
             statement.setInt(2, reservationId);
@@ -187,7 +177,7 @@ public class RoomBooking {
             if (rowsDeleted > 0 && roomModification>0) {
                 System.out.println("Booking canceled successfully!");
                 System.out.println("=========================================================\n"
-                		        + "|       Payment Refund                                    |\n"
+                		        + "|       Notification                                      |\n"
                 	         	+ "===========================================================\n"
                 	        	+ "|   Your payment will be  refunded within  4 working days.|\n"
                 	         	+ "===========================================================\n"+"");
@@ -212,7 +202,6 @@ public class RoomBooking {
             
             if (resultSet.next()) {
                 roomNo = resultSet.getInt("room_number");
-                System.out.println(roomNo);
             } else {
                 System.out.println("No room found for reservation ID: " + reservationId);
             }

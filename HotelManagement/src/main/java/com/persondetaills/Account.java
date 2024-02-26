@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,22 +81,22 @@ import com.roomreservation.RoomBooking;
 	            	
 	            } while (!isValidName);
 	           	
-	            String lastName=null;
-	            boolean isValidlast = false;
+	            String lastName = null;
+	            boolean isValidLast = false;
 	            do {
-	            	try {
-	    	        System.out.println("\nEnter last name:");
-	    	        lastName = reader.readLine();
-	                if (!validate.isValidFirstName(firstName)) {	                	
-		                   throw new CustomException("You may have entered an incorrect Dob");
-	                } else {
-	                    isValidName = true;
+	                try {
+	                    System.out.println("\nEnter last name:");
+	                    lastName = reader.readLine();
+	                    if (!validate.isValidLastName(lastName)) {	                	
+	                        throw new CustomException("You may have entered an incorrect last name.");
+	                    } else {
+	                        isValidLast = true;
+	                    }
+	                } catch (CustomException e) {
+	                    System.out.println(e.getMessage());
 	                }
-	            	}catch (CustomException e) {
-		            	System.out.println(e.getMessage());
-					}
-	            	
-	            } while (!isValidlast);
+	            } while (!isValidLast);
+
 	            
 	            String gender = null;
 	            boolean isValidgen = false;
@@ -121,17 +122,17 @@ import com.roomreservation.RoomBooking;
 		            boolean isValidDOB = false;
 		            do {
 		                try {
-		                    System.out.println("\nEnter date of birth (YYYY-MM-DD):");
+		                    System.out.println("\nEnter date of birth (YYYY-MM-DD) :");
 		                    dob = reader.readLine();
 		                    if (!validate.isValidDateOfBirth(dob)) {
-		                        throw new CustomException("You may have entered an incorrect Dob");
+		                        throw new CustomException("Age must be at least 20 years old.");
 		                    } else {
 		                        LocalDate birthDate = LocalDate.parse(dob);
 		                        LocalDate currentDate = LocalDate.now();
 		                        age = Period.between(birthDate, currentDate).getYears();
 
 		                        if (age >= 20) {
-		                            System.out.println("Valid Date of Birth. Age is: " + age);
+		                            System.out.println("Age is: " + age);
 		                            isValidDOB = true;
 		                        } else {
 		                            throw new CustomException("Age must be at least 20 years old.");
@@ -207,11 +208,11 @@ import com.roomreservation.RoomBooking;
 	                    System.out.println("\nUsername must start with a letter and may be followed by numbers; special characters are not allowed.");
 	                     UserName = reader.readLine();
 
-	                    if (!validate.isValidUsername(userName)) {
+	                    if (!validate.isValidUsername(UserName)) {
 	                        throw new CustomException("You may have entered an incorrect UserName format. Please ensure it follows the correct format.");
 	                    } else {
-	                        PreparedStatement preparedStatement = conn.prepareStatement("SELECT * FROM account WHERE user_name = ?");
-	                        preparedStatement.setString(1, userName);
+	                        PreparedStatement preparedStatement = conn.prepareStatement("SELECT * FROM DINESH.account WHERE user_name = ?");
+	                        preparedStatement.setString(1, UserName);
 	                        ResultSet resultSet = preparedStatement.executeQuery();
 	                        if (resultSet.next()) {
 	                            throw new CustomException("Username already exists. Please choose a different one.");
@@ -257,26 +258,43 @@ import com.roomreservation.RoomBooking;
 	        } catch (SQLException e) {
 				System.out.println(e.getMessage());}
 	    }
-
-	   
-	    private int getUserId(String username, int userType) throws SQLException {
-	        String query;
-	        if (1==userType) {
-	            query = "SELECT admin_id FROM DINESH.account WHERE user_name = ?";
-	        } else if (2==userType) {
-	            query = "SELECT customer_id FROM DINESH.account WHERE user_name = ?";
-	        } else {
-	            throw new IllegalArgumentException("Invalid user type: " + userType);
+	    public void insertRegisteredUsers(Customer customer) {
+	        try {
+	            String customerSql = "INSERT INTO DINESH.customer VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	            PreparedStatement customerStatement = conn.prepareStatement(customerSql);
+	
+	            String accountSql = "INSERT INTO DINESH.account (user_name, password,customer_id,ACCOUNT_TYPE) VALUES (?, ?, ?, ?)";
+	
+	            PreparedStatement accountStatement = conn.prepareStatement(accountSql);               
+	                customerStatement.setInt(1, customer.getCustomerID());
+	                customerStatement.setString(2, customer.getFirstName());
+	                customerStatement.setString(3, customer.getLastName());
+	                customerStatement.setInt(4, customer.getAge());
+	                customerStatement.setString(5, customer.getGender());
+	                customerStatement.setString(6, customer.getPhone());
+	                customerStatement.setString(7, customer.getEmail());
+	                customerStatement.setString(8, customer.getDob());
+	                customerStatement.setString(9, customer.getAddress());
+	                customerStatement.setString(10, customer.getZipCode());
+	                int customerRowsInserted = customerStatement.executeUpdate();
+	                accountStatement.setString(1, customer.getUserName());
+	                accountStatement.setString(2, customer.getPassword());
+	                accountStatement.setInt(3, customer.getCustomerID()); 
+	                accountStatement.setString(4, AccountType.CUSTOMER.toString());
+	                int accountRowsInserted = accountStatement.executeUpdate();
+	                if (customerRowsInserted > 0 && accountRowsInserted > 0) {
+	                	System.out.println("=".repeat(200));
+	                    System.out.println("\nCustomer Registered successfully!");
+	                } else {
+	                    System.out.println("Sorry Registration Failed");
+	                }	            
+	        } catch (SQLException e) {
+	            System.out.println("UserName is already taken");
 	        }
-	        PreparedStatement preparedStatement = conn.prepareStatement(query);
-	        preparedStatement.setString(1, username);
-	        ResultSet resultSet = preparedStatement.executeQuery();
-	        int Id = 0;
-	        if (resultSet.next()) {
-	            Id = resultSet.getInt(1);
-	        }
-	        return Id;
 	    }
+	   
+	   
 	    
 	    public void loginUser(BufferedReader reader) {
 	    	 boolean con = true;
@@ -337,23 +355,13 @@ import com.roomreservation.RoomBooking;
 	            	System.out.println("Username must start with a letter and may be followed by numbers; special characters are not allowed.");
 	                String username = reader.readLine();
 	                int Id = getUserId(username, 1);
-	                System.out.print("\nEnter password: ");
+	                System.out.println("\nEnter password: ");
 	                String password = reader.readLine();
-	                String sql = "SELECT * FROM DINESH.account WHERE user_name = ? AND password = ? AND account_type='admin'";
+	                String sql = "SELECT * FROM DINESH.account WHERE user_name = ? AND password = ? AND account_type='ADMIN'";
 	                PreparedStatement statement = conn.prepareStatement(sql);
 	                statement.setString(1, username);
 	                statement.setString(2, password);
 	                ResultSet resultSetOne = statement.executeQuery();
-	                String orcl = "SELECT c.first_name FROM DINESH.account a JOIN admin c ON a.admin_id = c.admin_id WHERE a.user_name = ?";
-	                PreparedStatement statements = conn.prepareStatement(orcl);
-	                statements.setString(1, username);
-	                ResultSet resultSet = statement.executeQuery();
-	                if (resultSet.next()) {
-	                    String fName = resultSet.getString("first_name");
-	                    System.out.println("------------------------------------------------------["+fName+" login successful!]----------------------------------------------------");
-	                } else {
-	                    System.out.println("Username not found or associated with a customer.");
-	                }
 	                if (resultSetOne.next()) {
 	                    System.out.println("===========================================================Admin Details====================================================================================");
 	                    ResultSet resultSet1 = getAdminResultSet(Id);
@@ -483,6 +491,25 @@ import com.roomreservation.RoomBooking;
 	            System.out.println(e.getMessage());
 	        }
 	    }
+	    
+	    private int getUserId(String username, int userType) throws SQLException {
+	        String query;
+	        if (1==userType) {
+	            query = "SELECT admin_id FROM DINESH.account WHERE user_name = ?";
+	        } else if (2==userType) {
+	            query = "SELECT customer_id FROM DINESH.account WHERE user_name = ?";
+	        } else {
+	            throw new IllegalArgumentException("Invalid user type: " + userType);
+	        }
+	        PreparedStatement preparedStatement = conn.prepareStatement(query);
+	        preparedStatement.setString(1, username);
+	        ResultSet resultSet = preparedStatement.executeQuery();
+	        int Id = 0;
+	        if (resultSet.next()) {
+	            Id = resultSet.getInt(1);
+	        }
+	        return Id;
+	    }
 
 	    public ResultSet getCustomerResultSet(int customerId) throws SQLException {
 	        String query = "SELECT FIRST_NAME,LAST_NAME,ADMIN_AGE,GENDER,PHONE,EMAIL,DOB,ADDRESS,ZIP_CODE FROM DINESH.customer WHERE customer_id = ?";
@@ -498,40 +525,7 @@ import com.roomreservation.RoomBooking;
 	        return preparedStatement.executeQuery();
 	    }
 
-	    public void insertRegisteredUsers(Customer customer) {
-	        try {
-	            String customerSql = "INSERT INTO DINESH.customer VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	
-	            PreparedStatement customerStatement = conn.prepareStatement(customerSql);
-	
-	            String accountSql = "INSERT INTO DINESH.account (user_name, password,customer_id,ACCOUNT_TYPE) VALUES (?, ?, ?, ?)";
-	
-	            PreparedStatement accountStatement = conn.prepareStatement(accountSql);               
-	                customerStatement.setInt(1, customer.getCustomerID());
-	                customerStatement.setString(2, customer.getFirstName());
-	                customerStatement.setString(3, customer.getLastName());
-	                customerStatement.setInt(4, customer.getAge());
-	                customerStatement.setString(5, customer.getGender());
-	                customerStatement.setString(6, customer.getPhone());
-	                customerStatement.setString(7, customer.getEmail());
-	                customerStatement.setString(8, customer.getDob());
-	                customerStatement.setString(9, customer.getAddress());
-	                customerStatement.setString(10, customer.getZipCode());
-	                int customerRowsInserted = customerStatement.executeUpdate();
-	                accountStatement.setString(1, customer.getUserName());
-	                accountStatement.setString(2, customer.getPassword());
-	                accountStatement.setInt(3, customer.getCustomerID()); 
-	                accountStatement.setString(4, AccountType.CUSTOMER.toString());
-	                int accountRowsInserted = accountStatement.executeUpdate();
-	                if (customerRowsInserted > 0 && accountRowsInserted > 0) {
-	                    System.out.println("Customer Registered successfully!");
-	                } else {
-	                    System.out.println("Sorry Registration Failed");
-	                }	            
-	        } catch (SQLException e) {
-	            System.out.println("UserName is already taken");
-	        }
-	    }
+	   
 	    private void performSearch(BufferedReader reader, Search search, int Id) {
 	        try {
 	            boolean running = true;
@@ -547,8 +541,9 @@ import com.roomreservation.RoomBooking;
 		                System.out.println("\t|     4. Check App rating            |");
 		                System.out.println("\t|     5. View Profile                |");
 		                System.out.println("\t|     6. Update Profile              |");
-		                System.out.println("\t|     7. Go Back                     |");
-		                System.out.println("\t|     8. Exit                        |");
+		                System.out.println("\t|     7. Booking History             |");
+		                System.out.println("\t|     8. Go Back                     |");
+		                System.out.println("\t|     9. Exit                        |");
 		                System.out.println("\t|                                    |");
 		                System.out.println("\t=====================================");
 
@@ -579,11 +574,14 @@ import com.roomreservation.RoomBooking;
 	                        case 6:
 	                        	Customer cus=new Customer(conn);
 	                        	 setCustomerDetails(cus, reader,Id);
-	                        	break;	                            
+	                        	break;
 	                        case 7:
+	                        	displayReservationDetails(Id);
+	                        	break;
+	                        case 8:
 	                            running = false;
 	                            break;
-	                        case 8:
+	                        case 9:
 	                        	System.out.println("Are You Sure Want To Exit (1.Quit 2.Continue)");
     	                    	int i= Integer.parseInt(reader.readLine());
     	                    	if(i==1) {
@@ -603,6 +601,100 @@ import com.roomreservation.RoomBooking;
 	            System.err.println("Error reading input: " + e.getMessage());
 	        }
 	    }
+	    public void roomBook(BufferedReader reader, int Id) {
+		    try {
+		        displayAllRooms();
+		        System.out.println("Enter Room Type to book: ");
+		        boolean validChoice=false;
+		        String roomType="";
+		        while (!validChoice) {
+		            System.out.println("\t============================================"); 
+		            System.out.println("\t|   Enter Room Type to search              |");
+		            System.out.println("\t============================================"); 
+		            System.out.println("\t|    1. Single                             |");
+		            System.out.println("\t|    2. Double                             |");
+		            System.out.println("\t|    3. Suite                              |");
+		            System.out.println("\t|    4. Go Back                            |");
+		            System.out.println("\t============================================"); 
+		            System.out.println("Enter a choice:");
+		            String input = reader.readLine();
+		            try {
+		                int roomTypeChoice = Integer.parseInt(input);
+		                if (roomTypeChoice >= 1 && roomTypeChoice <= 3) {
+		                    System.out.println("1. AC\n2. Non-AC");
+		                    int acChoice = Integer.parseInt(reader.readLine());
+		                    switch (roomTypeChoice) {
+		                        case 1:
+		                            roomType = (acChoice == 1) ? "SINGLE_AC" : "SINGLE_NON_AC";
+		                            break;
+		                        case 2:
+		                            roomType = (acChoice == 1) ? "DOUBLE_AC" : "DOUBLE_NON_AC";
+		                            break;
+		                        case 3:
+		                            roomType = (acChoice == 1) ? "SUITE_AC" : "SUITE_NON_AC";
+		                            break;
+		                    }
+		                    validChoice = true;
+		                } else if (roomTypeChoice == 4) {
+		                    validChoice = false;
+		                } else {
+		                    System.out.println("Invalid input. Please enter a valid option.");
+		                }
+		            } catch (NumberFormatException e) {
+		                System.out.println("Invalid input. Please enter a number.");
+		            }
+		        }
+
+		    
+		        int roomNumber = fetchRoomNumberByType(roomType);
+		        if(!(roomNumber > 0)) {
+		        	throw new CustomException("Sorry room is Unavailable");
+		        		}
+		        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		        LocalDate currentDate = LocalDate.now();
+
+		        LocalDate checkIn;
+		        String checkInDate = null;
+		        do {
+		            System.out.println("Enter a check-in date (YYYY-MM-DD):");
+		            checkInDate = reader.readLine();
+		            try {
+		                checkIn = LocalDate.parse(checkInDate, formatter);
+		                if (checkIn.isBefore(currentDate)) {
+		                    throw new CustomException("Check-in date cannot be before the current date.");
+		                }
+		                break; 
+		            } catch (DateTimeParseException e) {
+		                System.out.println("Invalid date format. Please enter date in YYYY-MM-DD format.");
+		            } catch (CustomException e) {
+		                System.out.println(e.getMessage());
+		            }
+		        } while (true);
+
+		        LocalDate checkOut;
+		        String checkOutDate=null;
+		        do {
+		            System.out.println("Enter a check-out date (YYYY-MM-DD):");
+		            checkOutDate = reader.readLine();
+		            try {
+		                checkOut = LocalDate.parse(checkOutDate, formatter);
+		                if (checkOut.isBefore(checkIn)) {
+		                    throw new CustomException("Check-out date cannot be before the check-in date.");
+		                }
+		                break; 
+		            } catch (DateTimeParseException e) {
+		                System.out.println("Invalid date format. Please enter date in YYYY-MM-DD format.");
+		            } catch (CustomException e) {
+		                System.out.println(e.getMessage());
+		            }
+		        } while (true);
+		        long noOfDays = calculateDaysBetween(checkInDate, checkOutDate);
+		        RoomBooking roomBooking = new RoomBooking(conn, new Room(roomNumber), checkInDate, checkOutDate);
+		        roomBooking.bookRoom(reader, Id, noOfDays);
+		    } catch (SQLException | NumberFormatException | IOException | CustomException e) {
+		        System.out.println(e.getMessage());
+		    }
+		}
 	    private void cancelBook(int customerId, BufferedReader reader, RoomBooking roomBooking) throws SQLException, IOException, CustomException {
 	        PreparedStatement statement = conn.prepareStatement("SELECT reservation_id FROM DINESH.Reservation WHERE customer_id = ?");
 	        statement.setInt(1, customerId);
@@ -674,60 +766,67 @@ import com.roomreservation.RoomBooking;
 		    	}
 	        }
 	    }
-	    private void searchByRoomType(BufferedReader reader,Search search,RoomBooking roomBooking) throws IOException, CustomException {
+	    private void searchByRoomType(BufferedReader reader, Search search, RoomBooking roomBooking) throws IOException, CustomException {
 	        RoomType roomType = null;
 	        boolean validChoice = false;
+	        
 	        while (!validChoice) {
-                System.out.println("=".repeat(250));
-                System.out.println("\t============================================"); 
-                System.out.println("\t|   Enter Room Type to search              |");
-                System.out.println("\t============================================"); 
-                System.out.println("\t|    1. Single                             |");
-                System.out.println("\t|    2. Double                             |");
-                System.out.println("\t|    3. Suite                              |");
-                System.out.println("\t|    4.Go Back                             |");
-                System.out.println("\t============================================"); 
-
-                System.out.println("=".repeat(250));
+	            System.out.println("=".repeat(250));
+	            System.out.println("\t============================================"); 
+	            System.out.println("\t|   Enter Room Type to search              |");
+	            System.out.println("\t============================================"); 
+	            System.out.println("\t|    1. Single                             |");
+	            System.out.println("\t|    2. Double                             |");
+	            System.out.println("\t|    3. Suite                              |");
+	            System.out.println("\t|    4. Go Back                            |");
+	            System.out.println("\t============================================"); 
+	            System.out.println("=".repeat(250));
 	            System.out.println("Enter a choice:");
-	            String input = reader.readLine();
+	            
 	            try {
-	                int roomTypeChoice = Integer.parseInt(input);
-	                switch (roomTypeChoice) {
-	                    case 1:
-	                    	roomType = RoomType.SINGLE;
-	                    	validChoice = true;
-	                        break;
-	                    case 2:
-	                        roomType = RoomType.DOUBLE;
-	                        validChoice = true;
-	                        break;
-	                    case 3:
-	                        roomType = RoomType.SUITE;
-	                        validChoice = true;
-	                        break;
-	                    case 4:
-	                        validChoice = false;
-	                        break;
-	                    default:
-	                        System.out.println("Invalid input. Please enter a valid option.");
+	                int roomTypeChoice = Integer.parseInt(reader.readLine());
+	                if (roomTypeChoice >= 1 && roomTypeChoice <= 3) {
+	                    System.out.println("1. AC\n2. Non AC");
+	                    int acChoice = Integer.parseInt(reader.readLine());
+	                    
+	                    switch (roomTypeChoice) {
+	                        case 1:
+	                            roomType = (acChoice == 1) ? RoomType.SINGLE_AC : RoomType.SINGLE_NON_AC;
+	                            break;
+	                        case 2:
+	                            roomType = (acChoice == 1) ? RoomType.DOUBLE_AC : RoomType.DOUBLE_NON_AC;
+	                            break;
+	                        case 3:
+	                            roomType = (acChoice == 1) ? RoomType.SUITE_AC : RoomType.SUITE_NON_AC;
+	                            break;
+	                    }
+	                    
+	                    validChoice = true;
+	                } else if (roomTypeChoice == 4) {
+	                    validChoice = false;
+	                } else {
+	                    System.out.println("Invalid input. Please enter a valid option.");
 	                }
 	            } catch (NumberFormatException e) {
 	                System.out.println("Invalid input. Please enter a number.");
 	            }
 	        }
+	        
 	        displayAndBookRooms(reader, search, roomBooking, roomType);
 	    }
 
 
 	    private void searchByRoomPrice(BufferedReader reader, Search search, RoomBooking roomBooking) throws IOException, SQLException {
-		    	System.out.println("==============================\n"
-		    			+ "| Available Prices of Rooms: |\n"
-		    			+ "| 1. $1000                   |\n"
-		    			+ "| 2. $1500                   |\n"
-		    			+ "| 3. $2500                   |\n"
-		    			+ "==============================\n"
-		    			);
+	    	System.out.println("======================================\n"
+	                + "| Available Prices of Rooms Per Day: |\n"
+	                + "| 1. SINGLE AC      = 1200rs         |\n"
+	                + "| 2. SINGLE Non-AC  = 1000rs         |\n"
+	                + "| 3. DOUBLE AC      = 1700rs         |\n"
+	                + "| 4. DOUBLE Non-AC  = 1500rs         |\n"
+	                + "| 5. SUITE AC       = 2700rs         |\n"
+	                + "| 6. SUITE Non-AC   = 2500rs         |\n"
+	                + "======================================\n");
+
 		    	
 	        System.out.println("Enter a room price:");
 	        int roomPrice = Integer.parseInt(reader.readLine());
@@ -792,9 +891,9 @@ import com.roomreservation.RoomBooking;
 			        }
 			        switch (choice) {
 			            case 1:
-			                displayAllRooms();
+			            	displayAll();
 			                System.out.println("=".repeat(250));
-			                System.out.println("Enter a roomNumber");
+			                System.out.println("Enter a roomNumber to Add");
 			                int num = Integer.parseInt(reader.readLine());
 			                System.out.println("\nEnter a roomType");
 			                String roomType = reader.readLine();
@@ -803,17 +902,17 @@ import com.roomreservation.RoomBooking;
 			                admin.addRoom(new Room(num, roomType, price));
 			                break;
 			            case 2:
-			                displayAllRooms();
+			            	displayAll();
 			                System.out.println("=".repeat(250));
 			                admin.updateRoom(reader);
 			                break;
 			            case 3:
-			                displayAllRooms();
+			            	displayAll();
 			                System.out.println("=".repeat(250));
 			                admin.deleteRoom(reader);
 			                break;
 			            case 4:
-			                displayAllRooms();
+			            	displayAll();
 			                System.out.println("=".repeat(250));
 			                break;
 			            case 5:
@@ -838,28 +937,49 @@ import com.roomreservation.RoomBooking;
 			}
 	    }
 
+	    private void displayAll() throws SQLException {
+	    	String sql = "SELECT room_number, room_type, rate, available FROM DINESH.rooms WHERE available = 'AVAILABLE'";
+	    	try (PreparedStatement statement = conn.prepareStatement(sql);
+	    	     ResultSet resultSet = statement.executeQuery()) {
+	    	    System.out.println("============================================================================");
+	    	    System.out.println("|                     ROOM DETAILS                                          |");
+	    	    System.out.println("=============================================================================");
+	    	    System.out.println("|  Room Number  |  Room Type            |   Room Price  |  Available Rooms  |");
+	    	    while (resultSet.next()) {
+	    	        System.out.println("---------------------------------------------------------------");
+	    	        System.out.printf("|  %-12s |  %-20s |  %-12.2f |  %-16s |\n",
+	    	                resultSet.getString("room_number"),
+	    	                resultSet.getString("room_type"),
+	    	                resultSet.getDouble("rate"),
+	    	                resultSet.getString("available"));
+	    	    }
+	    	    System.out.println("================================================================");
+	    	}
+	    	
+	    }
 	    private void displayAllRooms() throws SQLException {
 	        String sql = "SELECT room_type, RATE, COUNT(*) AS available_rooms FROM DINESH.rooms WHERE AVAILABLE = 'AVAILABLE' GROUP BY room_type, RATE";
 	        try (PreparedStatement statement = conn.prepareStatement(sql);
 	             ResultSet resultSet = statement.executeQuery()) {
-	            System.out.println("====================================================");
-	            System.out.println("|                     ROOM DETAILS                 |");
-	            System.out.println("====================================================");
-	            System.out.println("|  Room Type   |  Room Price   |  Available Rooms  |");
+	            System.out.println("===============================================================");
+	            System.out.println("|                     ROOM DETAILS                             |");
+	            System.out.println("===============================================================");
+	            System.out.println("|  Room Type            |   Room Price       |  Available Rooms              |");
 	            while (resultSet.next()) {
-	            System.out.println("----------------------------------------------------");
-	                System.out.printf("|  %-11s |  $%-11.2f |  %-16d |\n",
+	            System.out.println("---------------------------------------------------------------");
+	                System.out.printf("|  %-20s |  %-15.2f |  %-16d |\n",
 	                        resultSet.getString("room_type"),
 	                        resultSet.getDouble("RATE"),
 	                        resultSet.getInt("available_rooms"));
 	            }
-	            System.out.println("=====================================================");
+	            System.out.println("================================================================");
 	        }
 	    }
 
 	private void displayAndBookRooms(BufferedReader reader, Search search, RoomBooking roomBooking, RoomType roomType) {
 	    try {
 	        ResultSet roomSearchResult = search.searchRoomsByType(roomType.name());
+	        
 	        while (roomSearchResult.next()) {
 	            System.out.println("Room Number: " + roomSearchResult.getInt(1) + " Room Type: " + roomSearchResult.getString(2) + "  Room Price: " + roomSearchResult.getDouble(3) + "  Room status: " + roomSearchResult.getString(4));
 	        }
@@ -878,76 +998,6 @@ import com.roomreservation.RoomBooking;
 	    	System.out.println(e.getMessage());
 	    }
 	}
-	
-	public void roomBook(BufferedReader reader, int Id) {
-	    try {
-	        displayAllRooms();
-	        System.out.println("Enter Room Type to book: ");
-	        boolean validChoice=false;
-	        String roomType="";
-	        while (!validChoice) {
-                System.out.println("\t============================================"); 
-                System.out.println("\t|   Enter Room Type to search              |");
-                System.out.println("\t============================================"); 
-                System.out.println("\t|    1. Single                             |");
-                System.out.println("\t|    2. Double                             |");
-                System.out.println("\t|    3. Suite                              |");
-                System.out.println("\t|    4.Go Back                             |");
-                System.out.println("\t============================================"); 
-	            System.out.println("Enter a choice:");
-	            String input = reader.readLine();
-	            int roomTypeChoice = Integer.parseInt(input);
-	                switch (roomTypeChoice) {
-	                    case 1:
-	                    	roomType = RoomType.SINGLE.toString();
-	                    	validChoice = true;
-	                        break;
-	                    case 2:
-	                    	roomType =RoomType.DOUBLE.toString();
-	                        validChoice = true;
-	                        break;
-	                    case 3:
-	                    	roomType = RoomType.SUITE.toString();
-	                        validChoice = true;
-	                        break;
-	                    case 4:
-	                        validChoice = false;
-	                        break;
-	                    default:
-	                        System.out.println("Invalid input. Please enter a valid option.");
-	                }
-	           
-	        }
-	    
-	        int roomNumber = fetchRoomNumberByType(roomType);
-	        if(!(roomNumber > 0)) {
-	        	throw new CustomException("Sorry room is Unavailable");
-	        		}
-	        LocalDate currentDate = LocalDate.now();
-	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	        currentDate.format(formatter);
-	        System.out.println("Enter a check-in date (YYYY-MM-DD):");
-	        String checkInDate = reader.readLine();
-	        LocalDate checkIn = LocalDate.parse(checkInDate, formatter);
-	        if (checkIn.isBefore(currentDate)) {
-	            throw new CustomException("Check-in date cannot be before the current date.");
-	        }
-	        System.out.println("Enter a check-out date (YYYY-MM-DD):");
-	        String checkOutDate = reader.readLine();
-	        LocalDate checkOut = LocalDate.parse(checkOutDate, formatter);
-	        if (checkOut.isBefore(checkIn)) {
-	            throw new CustomException("Check-out date cannot be before the check-in date.");
-	        }
-	        long noOfDays = calculateDaysBetween(checkInDate, checkOutDate);
-	        RoomBooking roomBooking = new RoomBooking(conn, new Room(roomNumber), checkInDate, checkOutDate);
-	        roomBooking.bookRoom(reader, Id, noOfDays);
-	    } catch (SQLException | NumberFormatException | IOException | CustomException e) {
-	        System.out.println(e.getMessage());
-	    }
-	}
-	
-	
-	
 	private int fetchRoomNumberByType(String roomType) {
 		int roomNumber=0;
 	    try {
@@ -963,8 +1013,6 @@ import com.roomreservation.RoomBooking;
 	    }
 		return roomNumber;
 	}
-
-
 	public static long calculateDaysBetween(String startDate, String endDate) {
 	        LocalDate start = LocalDate.parse(startDate);
 	        LocalDate end = LocalDate.parse(endDate);
@@ -1115,6 +1163,35 @@ import com.roomreservation.RoomBooking;
 			}
 		}
       }
+	 private void displayReservationDetails(int customerId) throws SQLException {
+	        String reservationDetailsSql =" SELECT r.reservation_id, r.room_number, r.reserved_date, r.check_in_date, r.check_out_date, r.status, p.payment_id, p.reservation_id , p.amount, p.payment_date, p.payment_type, p.payment_status FROM DINESH.reservation r JOIN DINESH.payment p ON r.reservation_id = p.reservation_id WHERE r.customer_id = ?";
+	        PreparedStatement statement = conn.prepareStatement(reservationDetailsSql);
+	        statement.setInt(1, customerId);
+	        ResultSet resultSet = statement.executeQuery();
+
+	        while (resultSet.next()) {
+	        	System.out.println("\t======================================================================================================================================================");
+	        	System.out.println("\t|                        Booking history                                                                                                             |");
+	        	System.out.println("\t======================================================================================================================================================");
+	        	System.out.println("\t| Reservation ID | Room Number | Check-in Date | Check-out Date | RESERVED_DATE       | Status   | Payment ID | Payment Date | Payment Amount | Payment Type |");
+	        	System.out.println("\t======================================================================================================================================================");
+	        	while (resultSet.next()) {
+	        	    System.out.printf("\t| %-15d| %-12d| %-14s| %-15s| %-19s| %-9s| %-11d| %-13s| %-15.2f| %-13s|%n",
+	        	        resultSet.getInt("reservation_id"),
+	        	        resultSet.getInt("room_number"),
+	        	        resultSet.getString("check_in_date"),
+	        	        resultSet.getString("check_out_date"),
+	        	        resultSet.getString("RESERVED_DATE"),
+	        	        resultSet.getString("status"),
+	        	        resultSet.getInt("payment_id"),
+	        	        resultSet.getDate("payment_date"),
+	        	        resultSet.getDouble("amount"),
+	        	        resultSet.getString("payment_type"));
+	        	}
+	        	System.out.println("\t======================================================================================================================================================");
+
+	        }
+	    }
 	}
 	 
 	
