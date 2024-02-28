@@ -38,7 +38,7 @@ import com.roomreservation.RoomBooking;
         FeedBack feed =new FeedBack(conn);
         Search search = new Room(conn);
 
-		InputValidator validate= new InputValidator();
+		InputValidator validate= new InputValidator(conn);
 		public Account(String userName,String password) {
 			this.userName=userName;
 			this.password=password;
