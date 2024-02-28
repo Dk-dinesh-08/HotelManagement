@@ -1027,11 +1027,12 @@ import com.roomreservation.RoomBooking;
 		    	System.out.println("\t=================================");
 		    	System.out.println("\t|         Update Menu            |");
 		    	System.out.println("\t=================================");
-		    	System.out.println("\t|  1. Update email               |");
-		    	System.out.println("\t|  2. Update phone number        |");
-		    	System.out.println("\t|  3. Update address             |");
-		    	System.out.println("\t|  4. Update password            |");
-		    	System.out.println("\t|  5. Go back                    |");
+		    	System.out.println("\t|  1. Update Username               |");
+		    	System.out.println("\t|  2. Update email               |");
+		    	System.out.println("\t|  3. Update phone number        |");
+		    	System.out.println("\t|  4. Update address             |");
+		    	System.out.println("\t|  5. Update password            |");
+		    	System.out.println("\t|  6. Go back                    |");
 		    	System.out.println("\t=================================");
 
 		    	System.out.println("=".repeat(250));	
@@ -1039,7 +1040,26 @@ import com.roomreservation.RoomBooking;
 		        int choice = Integer.parseInt(reader.readLine());
             	cus.setCustomerID(Id);
 		        switch (choice) {
-		            case 1:
+		        case 1 :
+		        	String userName = null;
+	                boolean isValidUserName = false;
+	                do {
+	                    try {
+	                        System.out.println("Enter new  like Dineshkumar");
+	                        userName = reader.readLine();
+	                        if (!validate.isValidFirstName(userName)) {
+	                            throw new CustomException("You may have entered an incorrect userName format. Please ensure it follows the correct format.");
+	                        } else {
+	                            cus.setEmail(userName);
+	                            cus.updateName(cus);
+	                            isValidUserName = true;
+	                        }
+	                    } catch (CustomException e) {
+	                        System.out.println(e.getMessage());
+	                    }
+	                } while (!isValidUserName);
+	                break;
+		            case 2:
 		            	String email = null;
 		                boolean isValidEmail = false;
 		                do {
@@ -1058,7 +1078,7 @@ import com.roomreservation.RoomBooking;
 		                    }
 		                } while (!isValidEmail);
 		                break;
-		            case 2:
+		            case 3:
 		            	String phoneNumber = null;
 	            	    boolean isValidPhoneNumber = false;
 	            	    do {
@@ -1077,14 +1097,14 @@ import com.roomreservation.RoomBooking;
 	            	        }
 	            	    } while (!isValidPhoneNumber);
 	            	    break;
-		            case 3:
+		            case 4:
 		            	  System.out.println("Enter new address:");
 			                String address = reader.readLine();
 			                cus.setAddress(address);
 			                cus.updateAddress(cus);
 			                break;
 
-		            case 4:
+		            case 5:
 		            	String Password = null;
 	            	    boolean isValidPass = false;
 	            	    do {
@@ -1104,7 +1124,7 @@ import com.roomreservation.RoomBooking;
 	            	    } while (!isValidPass);
 	            	    break;
 		            	
-		            case 5:
+		            case 6:
 		                updating = false;
 		                break;
 		            default:
@@ -1168,7 +1188,7 @@ import com.roomreservation.RoomBooking;
 	        PreparedStatement statement = conn.prepareStatement(reservationDetailsSql);
 	        statement.setInt(1, customerId);
 	        ResultSet resultSet = statement.executeQuery();
-
+	        
 	        while (resultSet.next()) {
 	        	System.out.println("\t======================================================================================================================================================");
 	        	System.out.println("\t|                        Booking history                                                                                                             |");
@@ -1176,6 +1196,8 @@ import com.roomreservation.RoomBooking;
 	        	System.out.println("\t| Reservation ID | Room Number | Check-in Date | Check-out Date | RESERVED_DATE       | Status   | Payment ID | Payment Date | Payment Amount | Payment Type |");
 	        	System.out.println("\t======================================================================================================================================================");
 	        	while (resultSet.next()) {
+	        		
+	        	
 	        	    System.out.printf("\t| %-15d| %-12d| %-14s| %-15s| %-19s| %-9s| %-11d| %-13s| %-15.2f| %-13s|%n",
 	        	        resultSet.getInt("reservation_id"),
 	        	        resultSet.getInt("room_number"),

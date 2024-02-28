@@ -94,4 +94,10 @@ public class Customer extends Person {
     }
 
 
+	public void updateName(Customer cus) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 }
