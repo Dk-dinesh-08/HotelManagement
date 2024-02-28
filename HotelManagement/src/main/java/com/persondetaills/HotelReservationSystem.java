@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import com.exceptionhandling.CustomException;
 
 /**
  * The HotelReservationSystem class represents the main entry point for the hotel management system.
@@ -44,6 +43,7 @@ public class HotelReservationSystem {
                 // Create a BufferedReader to read user input
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 Account account = new Account(conn);
+                InputValidator validator = new InputValidator(conn);
                 int choice;
                 do {
                     // Display the main menu
@@ -81,7 +81,8 @@ public class HotelReservationSystem {
                                 exit = true;
                             	break;
                             default:
-                                throw new CustomException("Please Enter a valid Number");
+                                System.out.println("Please Enter a valid Number");
+                                break;
                         }
                     } catch (NumberFormatException e) {
                         System.out.println("Please enter a valid option (1, 2, 3 or 4).");
@@ -89,7 +90,7 @@ public class HotelReservationSystem {
                     }
                 } while (!exit && choice != 3);
                 conn.close(); 
-            } catch (SQLException | IOException | ClassNotFoundException | CustomException e) {
+            } catch (SQLException | IOException | ClassNotFoundException e) {
                 System.out.println(e.getMessage());
             }
         }

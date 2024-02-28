@@ -62,9 +62,6 @@ public class RoomBooking {
 	
 	public void bookRoom(BufferedReader reader,int Id,long noOfDays) throws SQLException {
         try {
-        	
-        	
-         
             	int  reservedId = generateNewReservationId(conn);
             	String bookRoomSql="INSERT INTO DINESH.reservation  VALUES (?, ?, ?,sysdate,?, ?, ?)";
                 PreparedStatement statement = conn.prepareStatement(bookRoomSql);            
